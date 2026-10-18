@@ -573,3 +573,68 @@ test('the single-image filter is re-applied after a stack was updated', async ()
   assert.equal(groups()[0].findByClass('asset-card').length, 2);
   assert.equal(groups()[0].hidden, true, 'two images left, still hidden');
 });
+
+test('set as primary updates the group locally without reloading details', async () => {
+  const { app, els, groups, server, questions } = setup({ server: { stacks: twoStacks() } });
+  await app.loadStacks();
+  await settle();
+  const callsBefore = server.calls.length;
+  const stack = app.state.stacks[0];
+
+  await app.handleSetPrimary(stack, stack.assets[2]);
+
+  const newCalls = server.calls.slice(callsBefore);
+  assert.deepEqual(newCalls.map((call) => `${call.method} ${call.path}`), ['PUT /api/stacks/s1']);
+  assert.equal(newCalls[0].body, JSON.stringify({ primaryAssetId: 'a3' }));
+  assert.equal(questions.length, 0, 'no confirmation for a non-destructive action');
+  assert.equal(els.STATUS.textContent, 'Image “a3.jpg” is now the primary image.');
+  assert.equal(app.state.stacks[0].primaryAssetId, 'a3');
+  const cards = groups()[0].findByClass('asset-card');
+  assert.equal(cards[0].getAttribute('data-asset-id'), 'a3');
+  assert.equal(cards[0].findByClass('badge').length, 1);
+  assert.deepEqual(groups()[0].findByTag('img').map((img) => img.src), ['blob:thumb-a3', 'blob:thumb-a1', 'blob:thumb-a2']);
+  assert.equal(app.state.busy, false);
+});
+
+test('set as primary via button click', async () => {
+  const { app, groups, server } = setup({ server: { stacks: twoStacks() } });
+  await app.loadStacks();
+  await settle();
+  groups()[1].findByClass('asset-card')[1].findByTag('button')[0].click();
+  await settle();
+  assert.equal(server.stacks[1].primaryAssetId, 'b2');
+  assert.equal(groups()[1].findByClass('asset-card')[0].getAttribute('data-asset-id'), 'b2');
+});
+
+test('set as primary falls back to the chosen image if the server returns no body', async () => {
+  const { app } = setup({
+    server: { stacks: twoStacks(), failures: { 'PUT /api/stacks/s1': () => jsonResponse(undefined, 204) } },
+  });
+  await app.loadStacks();
+  const stack = app.state.stacks[0];
+  await app.handleSetPrimary(stack, stack.assets[1]);
+  assert.equal(app.state.stacks[0].primaryAssetId, 'a2');
+});
+
+test('errors while setting the primary image are shown', async () => {
+  const { app, els } = setup({
+    server: {
+      stacks: twoStacks(),
+      failures: { 'PUT /api/stacks/s1': () => jsonResponse({ message: 'Forbidden' }, 403) },
+    },
+  });
+  await app.loadStacks();
+  const stack = app.state.stacks[0];
+  await app.handleSetPrimary(stack, stack.assets[1]);
+  assert.equal(els.STATUS.textContent, 'Error: HTTP 403: Forbidden');
+  assert.equal(app.state.stacks[0].primaryAssetId, 'a1');
+});
+
+test('set as primary is ignored while another action is running', async () => {
+  const { app, server } = setup({ server: { stacks: twoStacks() } });
+  await app.loadStacks();
+  const running = app.handleDeleteStack(app.state.stacks[0]);
+  await app.handleSetPrimary(app.state.stacks[1], app.state.stacks[1].assets[1]);
+  await running;
+  assert.ok(!server.calls.some((call) => call.method === 'PUT'));
+});

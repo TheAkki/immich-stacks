@@ -31,6 +31,7 @@
       STATUS_MISSING_TOKEN: 'Bitte einen Access Token bzw. API-Key angeben.',
       STATUS_ASSET_REMOVED: 'Bild „{name}“ wurde aus dem Stack entfernt. Die Datei bleibt erhalten.',
       STATUS_STACK_DELETED: 'Stack wurde gelöscht. Die Bilder bleiben erhalten.',
+      STATUS_PRIMARY_SET: 'Bild „{name}“ ist jetzt das Hauptbild.',
       STATUS_STACK_DISSOLVED:
         'Bild „{name}“ wurde entfernt; Immich hat den Stack aufgelöst, da zu wenige Bilder übrig sind.',
 
@@ -54,6 +55,8 @@
 
       BUTTON_REMOVE_ASSET: 'Aus Stack entfernen',
       BUTTON_REMOVE_ASSET_TITLE: 'Entfernt das Bild aus dem Stack. Die Datei bleibt erhalten.',
+      BUTTON_SET_PRIMARY: 'Als Hauptbild setzen',
+      BUTTON_SET_PRIMARY_TITLE: 'Macht dieses Bild zum Hauptbild des Stacks.',
       BUTTON_DELETE_STACK: 'Stack löschen',
       BUTTON_DELETE_STACK_TITLE: 'Hebt die Gruppierung auf. Die Bilder bleiben erhalten.',
 

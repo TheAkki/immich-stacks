@@ -55,6 +55,11 @@ function createFakeServer({ stacks = [], albums = {}, tags = {}, failures = {} }
       }
       return jsonResponse(undefined, 204);
     }],
+    ['PUT', /^\/api\/stacks\/([^/]+)$/, ([id], _, init) => {
+      const stack = findStack(id);
+      stack.primaryAssetId = JSON.parse(init.body).primaryAssetId;
+      return jsonResponse(stack);
+    }],
     ['DELETE', /^\/api\/stacks\/([^/]+)$/, ([id]) => {
       state.stacks = state.stacks.filter((stack) => stack.id !== id);
       return jsonResponse(undefined, 204);
@@ -63,7 +68,7 @@ function createFakeServer({ stacks = [], albums = {}, tags = {}, failures = {} }
 
   async function fetchFn(rawUrl, init) {
     const url = new URL(rawUrl);
-    state.calls.push({ method: init.method, path: url.pathname, url: rawUrl, headers: init.headers });
+    state.calls.push({ method: init.method, path: url.pathname, url: rawUrl, headers: init.headers, body: init.body });
     const failure = failures[`${init.method} ${url.pathname}`];
     if (failure) {
       return failure();
@@ -71,7 +76,7 @@ function createFakeServer({ stacks = [], albums = {}, tags = {}, failures = {} }
     for (const [method, pattern, handler] of routes) {
       const match = url.pathname.match(pattern);
       if (method === init.method && match) {
-        return handler(match.slice(1), url);
+        return handler(match.slice(1), url, init);
       }
     }
     return jsonResponse({ message: 'unknown route' }, 404);

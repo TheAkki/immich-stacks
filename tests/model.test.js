@@ -57,6 +57,16 @@ test('buildStackSummary marks the primary image and sorts it first', () => {
   assert.deepEqual(summary.assets.map((asset) => asset.isPrimary), [true, false, false]);
 });
 
+test('withPrimaryAsset switches the primary image and sorts it first', () => {
+  const summary = model.buildStackSummary(makeStack('s1', ['a1', 'a2', 'a3']));
+  const updated = model.withPrimaryAsset(summary, 'a3');
+  assert.equal(updated.primaryAssetId, 'a3');
+  assert.deepEqual(updated.assets.map((asset) => asset.id), ['a3', 'a1', 'a2']);
+  assert.deepEqual(updated.assets.map((asset) => asset.isPrimary), [true, false, false]);
+  assert.equal(summary.primaryAssetId, 'a1', 'original stays unchanged');
+  assert.equal(summary.assets[0].isPrimary, true);
+});
+
 test('buildStackSummary handles stacks without assets', () => {
   assert.deepEqual(model.buildStackSummary({ id: 's' }).assets, []);
 });

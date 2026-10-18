@@ -105,6 +105,36 @@ test('renderStackGroup renders heading, cards and thumbnails', () => {
   assert.equal(element.findByClass('notice').length, 0);
 });
 
+test('renderAssetCard shows no "set as primary" button without handler', () => {
+  const { card } = ui.renderAssetCard(new FakeDocument(), makeAssetInfo(), { onRemove: noop });
+  assert.ok(!card.allText().includes(t('BUTTON_SET_PRIMARY')));
+});
+
+test('renderStackGroup offers "set as primary" only for non-primary images', () => {
+  const calls = [];
+  const { element } = ui.renderStackGroup(new FakeDocument(), makeStackInfo(), {
+    onRemoveAsset: noop,
+    onSetPrimary: (stack, asset) => calls.push([stack.id, asset.id]),
+    onDeleteStack: noop,
+  });
+  const [primaryCard, otherCard] = element.findByClass('asset-card');
+  const buttonTexts = (card) => card.findByTag('button').map((button) => button.textContent);
+  assert.deepEqual(buttonTexts(primaryCard), ['Remove from stack']);
+  assert.deepEqual(buttonTexts(otherCard), ['Set as primary image', 'Remove from stack']);
+  otherCard.findByTag('button')[0].click();
+  assert.deepEqual(calls, [['s1', 'a2']]);
+});
+
+test('renderStackGroup offers no "set as primary" in a single-image stack', () => {
+  const stack = makeStackInfo({ assets: [makeAssetInfo({ isPrimary: false })] });
+  const { element } = ui.renderStackGroup(new FakeDocument(), stack, {
+    onRemoveAsset: noop,
+    onSetPrimary: noop,
+    onDeleteStack: noop,
+  });
+  assert.ok(!element.allText().includes(t('BUTTON_SET_PRIMARY')));
+});
+
 test('renderStackGroup uses the singular heading for a single image', () => {
   const stack = makeStackInfo({ assets: [makeAssetInfo({ isPrimary: true })] });
   const { element } = ui.renderStackGroup(new FakeDocument(), stack, { onRemoveAsset: noop, onDeleteStack: noop });
@@ -122,7 +152,8 @@ test('renderStackGroup forwards actions with the stack', () => {
     onDeleteStack: (s) => calls.push(['delete', s.id]),
   });
   element.findByClass('button--danger')[0].click();
-  element.findByClass('button--secondary')[1].click();
+  const secondCard = element.findByClass('asset-card')[1];
+  secondCard.findByTag('button').find((button) => button.textContent === t('BUTTON_REMOVE_ASSET')).click();
   assert.deepEqual(calls, [['delete', 's1'], ['remove', 's1', 'a2']]);
 });
 

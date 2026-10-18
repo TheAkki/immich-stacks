@@ -19,6 +19,8 @@ oben rechts umschalten. Weitere Sprachen können leicht ergänzt werden (siehe u
 Verfügbare Aktionen:
 
 - **Aus Stack entfernen**: Das Bild wird aus dem Stack herausgelöst. Die Datei bleibt erhalten.
+- **Als Hauptbild setzen**: Macht ein anderes Bild des Stacks zum Hauptbild
+  (nur bei Stacks mit mehr als einem Bild, ohne Rückfrage, da umkehrbar).
 - **Stack löschen**: Der Stack (also die Gruppierung) wird aufgelöst. Alle Bilder bleiben erhalten.
 
 > **Es werden niemals Bilder gelöscht.** Der API-Client in `js/api.js` hat

@@ -163,6 +163,7 @@
       const detailsError = state.detailErrors.get(stack.id);
       const rendered = ui.renderStackGroup(doc, stack, {
         onRemoveAsset: handleRemoveAsset,
+        onSetPrimary: handleSetPrimary,
         onDeleteStack: handleDeleteStack,
         detailsError: detailsError ? api.describeError(detailsError) : null,
       });
@@ -345,6 +346,19 @@
       });
     }
 
+    /** Sets a new primary image; non-destructive, so no confirmation is needed. */
+    async function handleSetPrimary(stack, asset) {
+      if (state.busy) {
+        return;
+      }
+      await runAction(async () => {
+        const updated = await state.client.setPrimaryAsset(stack.id, asset.id);
+        const primaryAssetId = (updated && updated.primaryAssetId) || asset.id;
+        await updateStack(model.withPrimaryAsset(findStack(stack.id) || stack, primaryAssetId));
+        return ['STATUS_PRIMARY_SET', { name: ui.displayName(asset) }];
+      });
+    }
+
     async function handleDeleteStack(stack) {
       const question = t('CONFIRM_DELETE_STACK', { count: stack.assets.length });
       if (state.busy || !confirmFn(question)) {
@@ -395,6 +409,7 @@
       applyFilter,
       changeLanguage,
       handleRemoveAsset,
+      handleSetPrimary,
       handleDeleteStack,
       state,
     };

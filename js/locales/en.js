@@ -31,6 +31,7 @@
       STATUS_MISSING_TOKEN: 'Please enter an access token or API key.',
       STATUS_ASSET_REMOVED: 'Image “{name}” was removed from the stack. The file is kept.',
       STATUS_STACK_DELETED: 'Stack was deleted. The images are kept.',
+      STATUS_PRIMARY_SET: 'Image “{name}” is now the primary image.',
       STATUS_STACK_DISSOLVED:
         'Image “{name}” was removed; Immich dissolved the stack because too few images were left.',
 
@@ -54,6 +55,8 @@
 
       BUTTON_REMOVE_ASSET: 'Remove from stack',
       BUTTON_REMOVE_ASSET_TITLE: 'Removes the image from the stack. The file is kept.',
+      BUTTON_SET_PRIMARY: 'Set as primary image',
+      BUTTON_SET_PRIMARY_TITLE: 'Makes this image the primary image of the stack.',
       BUTTON_DELETE_STACK: 'Delete stack',
       BUTTON_DELETE_STACK_TITLE: 'Removes the grouping. The images are kept.',
 

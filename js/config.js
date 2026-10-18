@@ -28,9 +28,11 @@
     BEARER_PREFIX: 'Bearer ',
     ACCEPT_HEADER: 'Accept',
     ACCEPT_JSON: 'application/json',
+    CONTENT_TYPE_HEADER: 'Content-Type',
 
     HTTP_METHODS: Object.freeze({
       GET: 'GET',
+      PUT: 'PUT',
       DELETE: 'DELETE',
     }),
     HTTP_STATUS_NO_CONTENT: 204,

@@ -83,12 +83,29 @@ test('deleteStack calls DELETE /api/stacks/{id}', async () => {
   assert.equal(calls[0].url, `${BASE_URL}/api/stacks/s1`);
 });
 
-test('safety: the client offers no function to delete assets', async () => {
+test('safety: all write requests only target stacks, never assets', async () => {
   const { client, calls } = recordingClient(() => jsonResponse(undefined, 204));
   await Promise.all(Object.values(client).map((fn) => fn('s1', 'a1')));
-  const deletes = calls.filter((call) => call.method === 'DELETE');
-  assert.ok(deletes.length > 0);
-  deletes.forEach((call) => assert.match(new URL(call.url).pathname, /^\/api\/stacks\//));
+  const writes = calls.filter((call) => call.method !== 'GET');
+  assert.deepEqual([...new Set(writes.map((call) => call.method))].sort(), ['DELETE', 'PUT']);
+  writes.forEach((call) => assert.match(new URL(call.url).pathname, /^\/api\/stacks\//));
+});
+
+test('setPrimaryAsset calls PUT /api/stacks/{id} with a JSON body', async () => {
+  const { client, calls } = recordingClient(() => jsonResponse({ id: 's1', primaryAssetId: 'a2' }));
+  assert.deepEqual(await client.setPrimaryAsset('s1', 'a2'), { id: 's1', primaryAssetId: 'a2' });
+  assert.equal(calls[0].method, 'PUT');
+  assert.equal(calls[0].url, `${BASE_URL}/api/stacks/s1`);
+  assert.equal(calls[0].body, JSON.stringify({ primaryAssetId: 'a2' }));
+  assert.equal(calls[0].headers['Content-Type'], 'application/json');
+  assert.equal(calls[0].headers['x-api-key'], TOKEN);
+});
+
+test('requests without a body send no Content-Type', async () => {
+  const { client, calls } = recordingClient();
+  await client.getStacks();
+  assert.equal(calls[0].body, undefined);
+  assert.equal(calls[0].headers['Content-Type'], undefined);
 });
 
 test('an empty response with status 200 returns null', async () => {

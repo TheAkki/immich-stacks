@@ -67,14 +67,24 @@
     });
   }
 
-  /** Card for a single image including the "remove from stack" action. */
-  function renderAssetCard(doc, asset, { onRemove }) {
+  /** Card for a single image with "remove from stack" and optionally "set as primary". */
+  function renderAssetCard(doc, asset, { onRemove, onSetPrimary = null }) {
     const thumbnail = renderThumbnail(doc, asset);
     const children = [el(doc, 'div', { className: 'thumbnail-frame' }, [thumbnail])];
     if (asset.isPrimary) {
       children.push(el(doc, 'span', { className: 'badge', text: t('LABEL_PRIMARY') }));
     }
     children.push(renderInfoList(doc, asset));
+    if (onSetPrimary) {
+      children.push(
+        renderButton(doc, {
+          text: t('BUTTON_SET_PRIMARY'),
+          title: t('BUTTON_SET_PRIMARY_TITLE'),
+          className: 'button button--secondary',
+          onClick: () => onSetPrimary(asset),
+        }),
+      );
+    }
     children.push(
       renderButton(doc, {
         text: t('BUTTON_REMOVE_ASSET'),
@@ -115,11 +125,16 @@
    * Renders a stack group.
    * @returns {{ element: object, thumbnails: Array<{assetId: string, img: object}> }}
    */
-  function renderStackGroup(doc, stack, { onRemoveAsset, onDeleteStack, detailsError = null }) {
+  function canBecomePrimary(stack, asset) {
+    return !asset.isPrimary && stack.assets.length > config.SINGLE_IMAGE_STACK_SIZE;
+  }
+
+  function renderStackGroup(doc, stack, { onRemoveAsset, onSetPrimary, onDeleteStack, detailsError = null }) {
     const thumbnails = [];
     const cards = stack.assets.map((asset) => {
       const { card, thumbnail } = renderAssetCard(doc, asset, {
         onRemove: (selected) => onRemoveAsset(stack, selected),
+        onSetPrimary: canBecomePrimary(stack, asset) ? (selected) => onSetPrimary(stack, selected) : null,
       });
       thumbnails.push({ assetId: asset.id, img: thumbnail });
       return card;

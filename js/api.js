@@ -104,12 +104,23 @@
       [config.ACCEPT_HEADER]: config.ACCEPT_JSON,
     };
 
+    function buildInit(method, body) {
+      if (body === undefined) {
+        return { method, headers };
+      }
+      return {
+        method,
+        headers: { ...headers, [config.CONTENT_TYPE_HEADER]: config.ACCEPT_JSON },
+        body: JSON.stringify(body),
+      };
+    }
+
     async function request(path, options = {}) {
-      const { method = HTTP_METHODS.GET, query, responseType = RESPONSE_TYPES.JSON } = options;
+      const { method = HTTP_METHODS.GET, query, body, responseType = RESPONSE_TYPES.JSON } = options;
       const url = buildUrl(apiRoot, path, query);
       let response;
       try {
-        response = await fetchFn(url, { method, headers });
+        response = await fetchFn(url, buildInit(method, body));
       } catch (error) {
         throw new ApiError('ERROR_NETWORK', { message: error.message }, config.NETWORK_ERROR_STATUS);
       }
@@ -139,6 +150,9 @@
         request(`${stackPath(stackId)}${PATHS.ASSETS}/${encode(assetId)}`, {
           method: HTTP_METHODS.DELETE,
         }),
+      /** Makes the given image the primary image of the stack. */
+      setPrimaryAsset: (stackId, assetId) =>
+        request(stackPath(stackId), { method: HTTP_METHODS.PUT, body: { primaryAssetId: assetId } }),
       /** Deletes only the stack (the grouping) – the images are kept. */
       deleteStack: (stackId) => request(stackPath(stackId), { method: HTTP_METHODS.DELETE }),
     });

@@ -64,6 +64,12 @@
     };
   }
 
+  /** Returns a copy of the stack with a new primary image (primary first). */
+  function withPrimaryAsset(stack, primaryAssetId) {
+    const assets = stack.assets.map((asset) => ({ ...asset, isPrimary: asset.id === primaryAssetId }));
+    return { ...stack, primaryAssetId, assets: sortPrimaryFirst(assets) };
+  }
+
   /** Runs fn for all items, at most `limit` at a time; preserves order. */
   async function mapWithConcurrency(items, limit, fn) {
     const results = new Array(items.length);
@@ -127,6 +133,7 @@
   const model = {
     buildAssetInfo,
     buildStackSummary,
+    withPrimaryAsset,
     mapWithConcurrency,
     loadStackDetails,
     stackMatchesQuery,
